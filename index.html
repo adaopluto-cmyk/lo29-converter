@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lo29 Coordinate Converter v1.02</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #111720;
+    --surface2: #161d28;
+    --border: #1e2d3d;
+    --accent: #00d4aa;
+    --accent2: #0090ff;
+    --warn: #ff6b35;
+    --text: #cdd6e0;
+    --text-dim: #5a7080;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0,212,170,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 48px 0 32px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid rgba(0,212,170,0.3);
+    padding: 4px 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    background: rgba(0,212,170,0.05);
+  }
+
+  h1 {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── FORM ── */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 480px) {
+    .field-row { grid-template-columns: 1fr; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  label span {
+    color: var(--text-dim);
+    font-size: 10px;
+    margin-left: 6px;
+  }
+
+  input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,170,0.1);
+  }
+
+  input::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+  /* ── CONVERT BUTTON ── */
+  .btn-convert {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-convert:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(0,212,170,0.3);
+  }
+
+  .btn-convert:active { transform: scale(0.99); }
+
+  .btn-convert.loading { pointer-events: none; opacity: 0.7; }
+
+  /* ── RESULT ── */
+  .result-card {
+    background: var(--surface2);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 4px;
+    padding: 24px;
+    margin-top: 16px;
+    animation: fadeIn 0.3s ease;
+    display: none;
+  }
+
+  .result-card.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 480px) {
+    .result-grid { grid-template-columns: 1fr; }
+  }
+
+  .result-item label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .result-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .coords-combined {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .coords-combined span { color: var(--text-dim); font-size: 11px; }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+  .maps-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px;
+    background: rgba(0,144,255,0.08);
+    border: 1px solid rgba(0,144,255,0.3);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .maps-btn:hover {
+    background: rgba(0,144,255,0.15);
+    box-shadow: 0 0 16px rgba(0,144,255,0.2);
+  }
+
+  /* ── HISTORY ── */
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .history-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    animation: fadeIn 0.3s ease;
+  }
+  .history-item:hover { border-color: rgba(0,212,170,0.3); }
+
+  .history-input {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .history-output {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+
+  .history-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .history-reuse {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+    text-align: right;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  /* ── CLEAR ── */
+  .clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    float: right;
+    margin-top: -2px;
+  }
+  .clear-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  /* ── ERROR ── */
+  .error-msg {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.3);
+    color: var(--warn);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 3px;
+    margin-top: 12px;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  /* ── INFO NOTE ── */
+  .info-note {
+    background: rgba(0,212,170,0.04);
+    border-left: 2px solid var(--accent);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    border-radius: 0 3px 3px 0;
+  }
+  .info-note strong { color: var(--text); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .tab-btn {
+    padding: 12px;
+    background: var(--surface);
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab-btn:first-child { border-right: 1px solid var(--border); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    background: var(--surface2);
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── INVERSE RESULT ── */
+  .inv-result-card {
+    background: var(--surface2);
+    border: 1px solid rgba(0,144,255,0.2);
+    border-radius: 4px;
+    padding: 24px;
+    margin-top: 16px;
+    display: none;
+  }
+  .inv-result-card.visible { display: block; animation: fadeIn 0.3s ease; }
+
+  .inv-result-card .card-title { color: var(--accent2); }
+  .inv-result-card .card-title::after { background: var(--border); }
+
+  .inv-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+
+  .inv-section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .inv-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .inv-row { grid-template-columns: 1fr; }
+  }
+
+  .inv-item label {
+    font-size: 10px;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .inv-value {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--accent2);
+  }
+
+  .btn-convert-inv {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  }
+
+  .btn-convert-inv:hover {
+    background: var(--accent2);
+    color: var(--bg);
+    box-shadow: 0 0 20px rgba(0,144,255,0.3);
+  }
+
+  .btn-convert-inv:active { transform: scale(0.99); }
+
+
+    text-align: center;
+    margin-top: 32px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="badge">Survey Tools · Mogalakwena</div>
+    <h1>Lo29 <span>⇌</span> WGS84<br>Coordinate Converter</h1>
+    <p class="subtitle">Hartebeesthoek94 · Transverse Mercator · CM 29°E</p>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('fwd')">⟶ &nbsp;Lo29 → WGS84</button>
+    <button class="tab-btn" onclick="switchTab('inv')">⟵ &nbsp;WGS84 → Lo29</button>
+  </div>
+
+  <!-- ══ TAB 1: Lo29 → WGS84 ══ -->
+  <div class="tab-panel active" id="tab-fwd">
+    <div class="card">
+      <div class="card-title">Input — Lo29 Coordinates</div>
+
+      <div class="info-note">
+        Auto-detects two input types:<br>
+        📐 <strong>CAD Local Grid</strong> (small values) — X = Easting, Y = Northing (negative = South). e.g. X=-12487, Y=-48173.<br>
+        📏 <strong>Absolute Lo29 Surveyed</strong> (large values) — X = Southing, Y = Westing. e.g. X=2652868, Y=11034.
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>X Coordinate <span>Easting / Southing</span></label>
+          <input type="number" id="inputX" placeholder="-12487.200" step="any">
+        </div>
+        <div class="field">
+          <label>Y Coordinate <span>Northing / Westing</span></label>
+          <input type="number" id="inputY" placeholder="-48173.589" step="any">
+        </div>
+      </div>
+
+      <button class="btn-convert" onclick="convertFwd()">
+        ⟶ &nbsp; Convert to WGS84
+      </button>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="result-card" id="resultCard">
+        <div class="card-title">Result — WGS84</div>
+        <div class="result-grid">
+          <div class="result-item">
+            <label>LATITUDE (N/S)</label>
+            <div class="result-value" id="resLat">—</div>
+          </div>
+          <div class="result-item">
+            <label>LONGITUDE (E/W)</label>
+            <div class="result-value" id="resLon">—</div>
+          </div>
+        </div>
+        <div class="coords-combined">
+          <div>
+            <span>Google Maps · Decimal Degrees</span><br>
+            <span id="resCombined" style="color:var(--text);font-size:14px;">—</span>
+          </div>
+          <button class="copy-btn" onclick="copyCoords('resCombined','copyBtn')" id="copyBtn">COPY</button>
+        </div>
+        <a class="maps-btn" id="mapsLink" href="#" target="_blank">
+          ⊕ &nbsp; Open in Google Maps
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB 2: WGS84 → Lo29 ══ -->
+  <div class="tab-panel" id="tab-inv">
+    <div class="card">
+      <div class="card-title">Input — WGS84 Coordinates</div>
+
+      <div class="info-note">
+        Enter decimal degree coordinates from Google Maps or a GPS device.<br>
+        <strong>Latitude</strong> (negative = South) · <strong>Longitude</strong> (positive = East).
+        e.g. -23.9358392, 28.8771471
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Latitude <span>N/S</span></label>
+          <input type="number" id="inputLat" placeholder="-23.9358392" step="any" min="-90" max="90">
+        </div>
+        <div class="field">
+          <label>Longitude <span>E/W</span></label>
+          <input type="number" id="inputLon" placeholder="28.8771471" step="any" min="-180" max="180">
+        </div>
+      </div>
+
+      <button class="btn-convert-inv" onclick="convertInv()">
+        ⟵ &nbsp; Convert to Lo29
+      </button>
+
+      <div class="error-msg" id="errorMsgInv"></div>
+
+      <div class="inv-result-card" id="invResultCard">
+        <div class="card-title">Result — Lo29</div>
+
+        <!-- CAD Local -->
+        <div class="inv-section">
+          <div class="inv-section-title">📐 CAD Local Grid (Standard Cartesian)</div>
+          <div class="inv-row">
+            <div class="inv-item">
+              <label>X — EASTING</label>
+              <div class="inv-value" id="invCadX">—</div>
+            </div>
+            <div class="inv-item">
+              <label>Y — NORTHING</label>
+              <div class="inv-value" id="invCadY">—</div>
+            </div>
+          </div>
+          <div class="coords-combined" style="margin-bottom:0;">
+            <div>
+              <span>CAD Local · X, Y</span><br>
+              <span id="invCadCombined" style="color:var(--text);font-size:13px;">—</span>
+            </div>
+            <button class="copy-btn" onclick="copyCoords('invCadCombined','copyCad')" id="copyCad">COPY</button>
+          </div>
+        </div>
+
+        <!-- Absolute Surveyed -->
+        <div class="inv-section">
+          <div class="inv-section-title">📏 Absolute Lo29 Surveyed (Southing / Westing)</div>
+          <div class="inv-row">
+            <div class="inv-item">
+              <label>X — SOUTHING</label>
+              <div class="inv-value" id="invSrvX">—</div>
+            </div>
+            <div class="inv-item">
+              <label>Y — WESTING</label>
+              <div class="inv-value" id="invSrvY">—</div>
+            </div>
+          </div>
+          <div class="coords-combined" style="margin-bottom:0;">
+            <div>
+              <span>Absolute Lo29 · X, Y</span><br>
+              <span id="invSrvCombined" style="color:var(--text);font-size:13px;">—</span>
+            </div>
+            <button class="copy-btn" onclick="copyCoords('invSrvCombined','copySrv')" id="copySrv">COPY</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY CARD -->
+  <div class="card">
+    <div class="card-title">
+      Conversion History
+      <button class="clear-btn" onclick="clearHistory()">CLEAR</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state">// No conversions yet</div>
+    </div>
+  </div>
+
+  <footer>Lo29 · EPSG:2046 · Hartebeesthoek94 / GRS80 · v1.02</footer>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  Lo29 ⇌ WGS84  |  Hartebeesthoek94 / GRS80
+//  Transverse Mercator, CM=29°E
+// ─────────────────────────────────────────────
+
+const LO29 = {
+  a:    6378137.0,
+  f:    1 / 298.257222101,
+  k0:   1.0,
+  lon0: 29.0 * Math.PI / 180,
+};
+
+// Calibrated origin (control point: CAD -12487.2/-48173.589 = GPS -23.9358392/28.8771471)
+const ORIGIN_E = -19.497;
+const ORIGIN_N = -2600014.199;
+
+// ── FORWARD: Lo29 → WGS84 ──────────────────
+function lo29ToWGS84(x, y) {
+  const absX = Math.abs(x), absY = Math.abs(y);
+  let std_E, std_N;
+  if (absX > 500000 && absY < 500000) {
+    // Absolute surveyed (Southing/Westing)
+    std_E = -y; std_N = -x;
+  } else {
+    // CAD local grid
+    std_E = ORIGIN_E + x;
+    std_N = ORIGIN_N + y;
+  }
+  return tmInverse(std_E, std_N);
+}
+
+function tmInverse(E, N) {
+  const { a, f, k0, lon0 } = LO29;
+  const e2 = 2*f - f*f, e4 = e2*e2, e6 = e4*e2;
+  const M  = N / k0;
+  const mu = M / (a * (1 - e2/4 - 3*e4/64 - 5*e6/256));
+  const e1 = (1 - Math.sqrt(1-e2)) / (1 + Math.sqrt(1-e2));
+  const phi1 = mu
+    + (3*e1/2 - 27*e1**3/32)        * Math.sin(2*mu)
+    + (21*e1**2/16 - 55*e1**4/32)   * Math.sin(4*mu)
+    + (151*e1**3/96)                 * Math.sin(6*mu)
+    + (1097*e1**4/512)               * Math.sin(8*mu);
+  const s1=Math.sin(phi1), c1=Math.cos(phi1), t1=Math.tan(phi1);
+  const N1 = a / Math.sqrt(1 - e2*s1*s1);
+  const T1 = t1*t1, C1 = e2/(1-e2)*c1*c1;
+  const R1 = a*(1-e2) / Math.pow(1-e2*s1*s1, 1.5);
+  const D  = E / (N1*k0);
+  const lat = phi1 - (N1*t1/R1)*(D*D/2
+    - (5+3*T1+10*C1-4*C1*C1-9*e2/(1-e2))*D**4/24
+    + (61+90*T1+298*C1+45*T1*T1-252*e2/(1-e2)-3*C1*C1)*D**6/720);
+  const lon = lon0 + (D
+    - (1+2*T1+C1)*D**3/6
+    + (5-2*C1+28*T1-3*C1*C1+8*e2/(1-e2)+24*T1*T1)*D**5/120) / c1;
+  return { lat: lat*180/Math.PI, lon: lon*180/Math.PI };
+}
+
+// ── INVERSE: WGS84 → Lo29 ──────────────────
+function wgs84ToLo29(lat_deg, lon_deg) {
+  const { a, f, k0, lon0 } = LO29;
+  const e2 = 2*f - f*f, e4 = e2*e2, e6 = e4*e2;
+  const lat = lat_deg * Math.PI / 180;
+  const lon = lon_deg * Math.PI / 180;
+  const sinL = Math.sin(lat), cosL = Math.cos(lat), tanL = Math.tan(lat);
+  const N1 = a / Math.sqrt(1 - e2*sinL*sinL);
+  const T  = tanL*tanL;
+  const C  = e2/(1-e2)*cosL*cosL;
+  const A  = cosL*(lon - lon0);
+  const M  = a*((1 - e2/4 - 3*e4/64 - 5*e6/256)*lat
+    - (3*e2/8 + 3*e4/32 + 45*e6/1024)*Math.sin(2*lat)
+    + (15*e4/256 + 45*e6/1024)*Math.sin(4*lat)
+    - (35*e6/3072)*Math.sin(6*lat));
+  const std_E = k0*N1*(A + (1-T+C)*A**3/6
+    + (5-18*T+T*T+72*C-58*e2/(1-e2))*A**5/120);
+  const std_N = k0*(M + N1*tanL*(A*A/2
+    + (5-T+9*C+4*C*C)*A**4/24
+    + (61-58*T+T*T+600*C-330*e2/(1-e2))*A**6/720));
+
+  // CAD local
+  const cad_x = std_E - ORIGIN_E;
+  const cad_y = std_N - ORIGIN_N;
+
+  // Absolute surveyed (Southing/Westing)
+  const srv_x = -std_N;  // Southing
+  const srv_y = -std_E;  // Westing
+
+  return { cad_x, cad_y, srv_x, srv_y };
+}
+
+// ─────────────────────────────────────────────
+//  History
+// ─────────────────────────────────────────────
+let history = JSON.parse(localStorage.getItem('lo29_history') || '[]');
+
+function saveHistory(entry) {
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+  localStorage.setItem('lo29_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = '<div class="empty-state">// No conversions yet</div>';
+    return;
+  }
+  list.innerHTML = history.map((h, i) => {
+    const isFwd = h.type === 'fwd';
+    const inputStr  = isFwd
+      ? `Lo29  X: ${h.x.toLocaleString()}  Y: ${h.y.toLocaleString()}`
+      : `GPS  ${h.lat.toFixed(7)}, ${h.lon.toFixed(7)}`;
+    const outputStr = isFwd
+      ? `${h.lat.toFixed(7)}, ${h.lon.toFixed(7)}`
+      : `CAD  X:${h.cad_x.toFixed(3)}  Y:${h.cad_y.toFixed(3)}`;
+    return `
+      <div class="history-item" onclick="loadHistory(${i})">
+        <div>
+          <div class="history-input">${inputStr}</div>
+          <div class="history-output">${outputStr}</div>
+        </div>
+        <div>
+          <div class="history-time">${isFwd ? '→' : '←'} ${h.time}</div>
+          <div class="history-reuse">↑ reuse</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function loadHistory(i) {
+  const h = history[i];
+  if (h.type === 'fwd') {
+    switchTab('fwd');
+    document.getElementById('inputX').value = h.x;
+    document.getElementById('inputY').value = h.y;
+    showResultFwd(h.lat, h.lon);
+  } else {
+    switchTab('inv');
+    document.getElementById('inputLat').value = h.lat;
+    document.getElementById('inputLon').value = h.lon;
+    showResultInv(h.cad_x, h.cad_y, h.srv_x, h.srv_y);
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem('lo29_history');
+  renderHistory();
+}
+
+// ─────────────────────────────────────────────
+//  Tab switching
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', (tab==='fwd'&&i===0)||(tab==='inv'&&i===1)));
+  document.getElementById('tab-fwd').classList.toggle('active', tab==='fwd');
+  document.getElementById('tab-inv').classList.toggle('active', tab==='inv');
+}
+
+// ─────────────────────────────────────────────
+//  Forward: Lo29 → WGS84
+// ─────────────────────────────────────────────
+function convertFwd() {
+  const xVal = document.getElementById('inputX').value.trim();
+  const yVal = document.getElementById('inputY').value.trim();
+  const err  = document.getElementById('errorMsg');
+  err.classList.remove('visible');
+  if (!xVal || !yVal) { err.textContent='ERROR: Both X and Y are required.'; err.classList.add('visible'); return; }
+  const x = parseFloat(xVal), y = parseFloat(yVal);
+  if (isNaN(x)||isNaN(y)) { err.textContent='ERROR: Invalid numeric values.'; err.classList.add('visible'); return; }
+  try {
+    const { lat, lon } = lo29ToWGS84(x, y);
+    if (lat<-90||lat>90||lon<-180||lon>180) {
+      err.textContent='ERROR: Result outside valid bounds. Check input values.';
+      err.classList.add('visible'); return;
+    }
+    showResultFwd(lat, lon);
+    saveHistory({ type:'fwd', x, y, lat, lon, time: now() });
+  } catch(e) {
+    err.textContent='ERROR: Conversion failed.'; err.classList.add('visible');
+  }
+}
+
+function showResultFwd(lat, lon) {
+  document.getElementById('resLat').textContent = lat.toFixed(7)+'°';
+  document.getElementById('resLon').textContent = lon.toFixed(7)+'°';
+  document.getElementById('resCombined').textContent = `${lat.toFixed(7)}, ${lon.toFixed(7)}`;
+  document.getElementById('mapsLink').href = `https://www.google.com/maps?q=${lat.toFixed(7)},${lon.toFixed(7)}`;
+  document.getElementById('resultCard').classList.add('visible');
+  document.getElementById('copyBtn').textContent='COPY';
+  document.getElementById('copyBtn').classList.remove('copied');
+}
+
+// ─────────────────────────────────────────────
+//  Inverse: WGS84 → Lo29
+// ─────────────────────────────────────────────
+function convertInv() {
+  const latVal = document.getElementById('inputLat').value.trim();
+  const lonVal = document.getElementById('inputLon').value.trim();
+  const err    = document.getElementById('errorMsgInv');
+  err.classList.remove('visible');
+  if (!latVal||!lonVal) { err.textContent='ERROR: Both Latitude and Longitude are required.'; err.classList.add('visible'); return; }
+  const lat = parseFloat(latVal), lon = parseFloat(lonVal);
+  if (isNaN(lat)||isNaN(lon)) { err.textContent='ERROR: Invalid numeric values.'; err.classList.add('visible'); return; }
+  if (lat<-90||lat>90) { err.textContent='ERROR: Latitude must be between -90 and 90.'; err.classList.add('visible'); return; }
+  if (lon<-180||lon>180) { err.textContent='ERROR: Longitude must be between -180 and 180.'; err.classList.add('visible'); return; }
+  try {
+    const { cad_x, cad_y, srv_x, srv_y } = wgs84ToLo29(lat, lon);
+    showResultInv(cad_x, cad_y, srv_x, srv_y);
+    saveHistory({ type:'inv', lat, lon, cad_x, cad_y, srv_x, srv_y, time: now() });
+  } catch(e) {
+    err.textContent='ERROR: Conversion failed.'; err.classList.add('visible');
+  }
+}
+
+function showResultInv(cad_x, cad_y, srv_x, srv_y) {
+  document.getElementById('invCadX').textContent = cad_x.toFixed(3);
+  document.getElementById('invCadY').textContent = cad_y.toFixed(3);
+  document.getElementById('invCadCombined').textContent = `${cad_x.toFixed(3)}, ${cad_y.toFixed(3)}`;
+  document.getElementById('invSrvX').textContent = srv_x.toFixed(3);
+  document.getElementById('invSrvY').textContent = srv_y.toFixed(3);
+  document.getElementById('invSrvCombined').textContent = `${srv_x.toFixed(3)}, ${srv_y.toFixed(3)}`;
+  document.getElementById('invResultCard').classList.add('visible');
+  ['copyCad','copySrv'].forEach(id => {
+    document.getElementById(id).textContent='COPY';
+    document.getElementById(id).classList.remove('copied');
+  });
+}
+
+// ─────────────────────────────────────────────
+//  Utilities
+// ─────────────────────────────────────────────
+function copyCoords(srcId, btnId) {
+  const val = document.getElementById(srcId).textContent;
+  navigator.clipboard.writeText(val).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.textContent='COPIED ✓'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function now() {
+  return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Enter') {
+    const fwdActive = document.getElementById('tab-fwd').classList.contains('active');
+    fwdActive ? convertFwd() : convertInv();
+  }
+});
+
+renderHistory();
+
+</script>
+</body>
+</html>
