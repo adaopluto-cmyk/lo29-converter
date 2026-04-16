@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lo29 Coordinate Converter v1.02</title>
+<title>Lo29 Coordinate Converter v2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e14;
-    --surface: #111720;
-    --surface2: #161d28;
-    --border: #1e2d3d;
+    --bg: #0f1923;
+    --surface: #162030;
+    --surface2: #1c2a3a;
+    --border: #1e3448;
     --accent: #00d4aa;
-    --accent2: #0090ff;
+    --accent2: #4d9fff;
+    --gps: #f0c040;
     --warn: #ff6b35;
-    --text: #cdd6e0;
-    --text-dim: #5a7080;
+    --text: #d0dde8;
+    --text-dim: #4a6680;
     --mono: 'Share Tech Mono', monospace;
     --sans: 'Barlow', sans-serif;
   }
@@ -57,7 +58,7 @@
     transform: translateX(-50%);
     width: 600px;
     height: 400px;
-    background: radial-gradient(ellipse, rgba(0,212,170,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(0,212,170,0.05) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -80,12 +81,12 @@
     font-family: var(--mono);
     font-size: 11px;
     color: var(--accent);
-    border: 1px solid rgba(0,212,170,0.3);
+    border: 1px solid rgba(0,212,170,0.25);
     padding: 4px 12px;
     letter-spacing: 3px;
     text-transform: uppercase;
     margin-bottom: 16px;
-    background: rgba(0,212,170,0.05);
+    background: rgba(0,212,170,0.06);
   }
 
   h1 {
@@ -113,6 +114,7 @@
     margin-bottom: 16px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
   }
 
   .card::before {
@@ -189,7 +191,7 @@
 
   input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,212,170,0.1);
+    box-shadow: 0 0 0 2px rgba(0,212,170,0.15);
   }
 
   input::placeholder { color: var(--text-dim); opacity: 0.5; }
@@ -306,8 +308,8 @@
     gap: 8px;
     width: 100%;
     padding: 11px;
-    background: rgba(0,144,255,0.08);
-    border: 1px solid rgba(0,144,255,0.3);
+    background: rgba(77,159,255,0.08);
+    border: 1px solid rgba(77,159,255,0.3);
     color: var(--accent2);
     font-family: var(--mono);
     font-size: 12px;
@@ -319,8 +321,8 @@
     text-decoration: none;
   }
   .maps-btn:hover {
-    background: rgba(0,144,255,0.15);
-    box-shadow: 0 0 16px rgba(0,144,255,0.2);
+    background: rgba(77,159,255,0.15);
+    box-shadow: 0 0 16px rgba(77,159,255,0.2);
   }
 
   /* ── HISTORY ── */
@@ -465,7 +467,7 @@
   /* ── INVERSE RESULT ── */
   .inv-result-card {
     background: var(--surface2);
-    border: 1px solid rgba(0,144,255,0.2);
+    border: 1px solid rgba(77,159,255,0.2);
     border-radius: 4px;
     padding: 24px;
     margin-top: 16px;
@@ -534,12 +536,52 @@
   .btn-convert-inv:hover {
     background: var(--accent2);
     color: var(--bg);
-    box-shadow: 0 0 20px rgba(0,144,255,0.3);
+    box-shadow: 0 0 20px rgba(77,159,255,0.3);
   }
 
   .btn-convert-inv:active { transform: scale(0.99); }
 
+  /* ── GPS BUTTON ── */
+  .btn-gps {
+    width: 100%;
+    padding: 12px;
+    background: rgba(240,192,64,0.07);
+    border: 1px solid rgba(240,192,64,0.35);
+    color: var(--gps);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-gps:hover {
+    background: rgba(240,192,64,0.14);
+    box-shadow: 0 0 16px rgba(240,192,64,0.2);
+  }
+  .btn-gps:active { transform: scale(0.99); }
+  .btn-gps:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
+  .gps-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gps);
+    text-align: center;
+    padding: 6px;
+    margin-bottom: 10px;
+    display: none;
+    letter-spacing: 1px;
+  }
+  .gps-status.visible { display: block; }
+
+  /* ── FOOTER ── */
+  footer {
     text-align: center;
     margin-top: 32px;
     font-family: var(--mono);
@@ -629,6 +671,11 @@
         e.g. -23.9358392, 28.8771471
       </div>
 
+      <button class="btn-gps" id="gpsBtn" onclick="useMyGPS()">
+        📍 &nbsp; Use My GPS Location
+      </button>
+      <div class="gps-status" id="gpsStatus"></div>
+
       <div class="field-row">
         <div class="field">
           <label>Latitude <span>N/S</span></label>
@@ -708,7 +755,7 @@
     </div>
   </div>
 
-  <footer>Lo29 · EPSG:2046 · Hartebeesthoek94 / GRS80 · v1.02</footer>
+  <footer>Lo29 · EPSG:2046 · Hartebeesthoek94 / GRS80 · v2.1</footer>
 
 </div>
 
@@ -944,8 +991,67 @@ function showResultInv(cad_x, cad_y, srv_x, srv_y) {
 }
 
 // ─────────────────────────────────────────────
-//  Utilities
+//  GPS: Use Device Location
 // ─────────────────────────────────────────────
+function useMyGPS() {
+  const btn    = document.getElementById('gpsBtn');
+  const status = document.getElementById('gpsStatus');
+
+  if (!navigator.geolocation) {
+    status.textContent = '✕ Geolocation not supported on this device.';
+    status.style.color = 'var(--warn)';
+    status.classList.add('visible');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⟳  Acquiring GPS signal...';
+  status.textContent = '⟳  Waiting for GPS fix...';
+  status.style.color = 'var(--gps)';
+  status.classList.add('visible');
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+
+      // Fill in the fields
+      document.getElementById('inputLat').value = lat.toFixed(7);
+      document.getElementById('inputLon').value = lon.toFixed(7);
+
+      // Show accuracy
+      status.textContent = `✓ GPS fix acquired — accuracy ±${acc.toFixed(1)} m`;
+      status.style.color = acc < 20 ? 'var(--accent)' : acc < 50 ? 'var(--gps)' : 'var(--warn)';
+
+      // Auto-convert
+      const { cad_x, cad_y, srv_x, srv_y } = wgs84ToLo29(lat, lon);
+      showResultInv(cad_x, cad_y, srv_x, srv_y);
+      saveHistory({ type:'inv', lat, lon, cad_x, cad_y, srv_x, srv_y, time: now() });
+
+      btn.disabled = false;
+      btn.innerHTML = '📍 &nbsp; Use My GPS Location';
+    },
+    (err) => {
+      const messages = {
+        1: '✕ Permission denied — please allow location access.',
+        2: '✕ GPS signal unavailable. Try moving outdoors.',
+        3: '✕ GPS timed out. Please try again.',
+      };
+      status.textContent = messages[err.code] || '✕ GPS error. Please try again.';
+      status.style.color = 'var(--warn)';
+      btn.disabled = false;
+      btn.innerHTML = '📍 &nbsp; Use My GPS Location';
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0
+    }
+  );
+}
+
+
 function copyCoords(srcId, btnId) {
   const val = document.getElementById(srcId).textContent;
   navigator.clipboard.writeText(val).then(() => {
